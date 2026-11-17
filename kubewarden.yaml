@@ -1,0 +1,48 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: admission-controller
+spec:
+  destination:
+    namespace: kubewarden
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: admission-controller
+    repoURL: https://charts.kubewarden.io
+    targetRevision: 6.1.0
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - RespectIgnoreDifferences=true
+  ignoreDifferences:
+  - group: ""
+    kind: "Secret"
+    name: kubewarden-ca
+    namespace: kubewarden
+    jsonPointers: 
+     - /data
+  - group: ""
+    kind: "Secret"
+    name: kubewarden-webhook-server-cert
+    namespace: kubewarden
+    jsonPointers: 
+     - /data
+  - group: ""
+    kind: "Secret"
+    name: kubewarden-audit-scanner-client-cert
+    namespace: kubewarden
+    jsonPointers: 
+     - /data
+  - group: "admissionregistration.k8s.io"
+    kind: "MutatingWebhookConfiguration"
+    jqPathExpressions: 
+     - '.webhooks[]?.clientConfig.caBundle'
+  - group: "admissionregistration.k8s.io"
+    kind: "ValidatingWebhookConfiguration"
+    jqPathExpressions: 
+     - '.webhooks[]?.clientConfig.caBundle'
+  
